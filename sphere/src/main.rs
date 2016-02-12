@@ -30,7 +30,7 @@ fn main() {
 	let api_url = matches.value_of("API_URL").unwrap_or("https://api.sphere.io");
 
 
-	if let Some(access_token) = auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
+	let access_token = auth::retrieve_token(auth_url, project_key, client_id, client_secret).unwrap();
 		println!("token: {}", access_token);
 
 		let mut headers = Headers::new();
@@ -55,5 +55,4 @@ fn main() {
 		projets_res.read_to_string(&mut body).unwrap();
 		
 		println!("Response: {}", body);
-	}
 }

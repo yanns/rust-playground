@@ -7,7 +7,9 @@ Usage:
 cargo run -- <PROJECT_KEY> <CLIENT_ID> <CLIENT_SECRET>
 ```
 
-With log for `auth` module:
+To output some logs, [configure the `RUST_LOG` environment variable](http://doc.rust-lang.org/log/env_logger/index.html)
+
+Example: to enable all logs for the `auth` module:
 ```
 RUST_LOG=sphere::auth cargo run -- <PROJECT_KEY> <CLIENT_ID> <CLIENT_SECRET>
 ```

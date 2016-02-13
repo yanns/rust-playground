@@ -1,6 +1,7 @@
 extern crate hyper;
 extern crate rustc_serialize;
 extern crate clap;
+extern crate chrono;
 
 use std::io::Read;
 
@@ -30,29 +31,34 @@ fn main() {
 	let api_url = matches.value_of("API_URL").unwrap_or("https://api.sphere.io");
 
 
-	let access_token = auth::retrieve_token(auth_url, project_key, client_id, client_secret).unwrap();
-		println!("token: {}", access_token);
+	match auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
+		Err(err) => println!("error: {}", err),
+		Ok(token) => {
+			let access_token = token.access_token();
+			println!("token: {} {}", access_token, token.is_valid());
 
-		let mut headers = Headers::new();
-		headers.set(
-			Authorization(
-				Bearer {
-					token: access_token.to_owned()
-				}
-			)
-		);
+			let mut headers = Headers::new();
+			headers.set(
+				Authorization(
+					Bearer {
+						token: access_token.to_owned()
+					}
+				)
+			);
 
-		let client = Client::new();
+			let client = Client::new();
 
-		let uri = format!("{}/{}/products?limit=1", api_url, project_key);
-		let mut projets_res = client.get(&uri)
-			.header(Connection::close())
-			.headers(headers)
-			.send()
-			.unwrap();
+			let uri = format!("{}/{}/products?limit=1", api_url, project_key);
+			let mut projets_res = client.get(&uri)
+				.header(Connection::close())
+				.headers(headers)
+				.send()
+				.unwrap();
 
-		let mut body = String::new();
-		projets_res.read_to_string(&mut body).unwrap();
-		
-		println!("Response: {}", body);
+			let mut body = String::new();
+			projets_res.read_to_string(&mut body).unwrap();
+
+			println!("Response: {}", body);
+		}
+	}
 }

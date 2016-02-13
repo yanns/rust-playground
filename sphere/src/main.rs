@@ -35,7 +35,7 @@ fn main() {
 
 
 	match auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
-		Err(err) => error!("error: {}", err),
+		Err(err) => panic!("error: {}", err),
 		Ok(token) => {
 			let access_token = token.access_token();
 			debug!("token: {} {}", access_token, token.is_valid());

@@ -26,6 +26,7 @@ impl Token {
 	}
 
 	pub fn is_valid_with_margin(&self, now: DateTime<UTC>,  margin: Duration) -> bool {
+		debug!("check if now ({}) is valid for expiration date {} with a margin of {}", now, self.expires_at, margin);
 		now + margin < self.expires_at
 	}
 
@@ -73,7 +74,7 @@ pub fn retrieve_token(auth_url: &str, project_key: &str, client_id: &str , clien
 			res.read_to_string(&mut body)
 				.map_err(|err| err.to_string())
 				.and_then(|_| {
-					println!("Response from '{}': {}", url, body);
+					debug!("Response from '{}': {}", url, body);
 					json::decode::<TokenFromApi>(&body)
 						.map_err(|err| err.to_string())
 						.map(|token_from_api| Token::new(&token_from_api.access_token, token_from_api.expires_in))

@@ -2,6 +2,8 @@ extern crate hyper;
 extern crate rustc_serialize;
 extern crate clap;
 extern crate chrono;
+#[macro_use] extern crate log;
+extern crate env_logger;
 
 use std::io::Read;
 
@@ -13,6 +15,7 @@ use hyper::header::{Headers, Authorization, Bearer};
 mod auth;
 
 fn main() {
+	env_logger::init().unwrap();
 	let matches = App::new("sphere")
 		.version("1.0")
 		.author("Yann Simon <yann.simon.fr@gmail.com>")
@@ -32,10 +35,10 @@ fn main() {
 
 
 	match auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
-		Err(err) => println!("error: {}", err),
+		Err(err) => error!("error: {}", err),
 		Ok(token) => {
 			let access_token = token.access_token();
-			println!("token: {} {}", access_token, token.is_valid());
+			debug!("token: {} {}", access_token, token.is_valid());
 
 			let mut headers = Headers::new();
 			headers.set(

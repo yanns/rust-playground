@@ -1,3 +1,4 @@
+use std::fmt;
 use std::io::Read;
 
 use hyper::Client;
@@ -7,9 +8,16 @@ use rustc_serialize::json;
 use chrono::*;
 
 /// access token
+#[derive(Debug)]
 pub struct Token {
   access_token: String,
   expires_at: DateTime<UTC>
+}
+
+impl fmt::Display for Token {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "Token: access_token = {}, expires_at = {}", self.access_token, self.expires_at)
+	}
 }
 
 impl Token {

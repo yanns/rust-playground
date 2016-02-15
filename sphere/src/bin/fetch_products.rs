@@ -1,9 +1,8 @@
 extern crate hyper;
-extern crate rustc_serialize;
 extern crate clap;
-extern crate chrono;
 #[macro_use] extern crate log;
 extern crate env_logger;
+extern crate sphere;
 
 use std::io::Read;
 
@@ -11,8 +10,6 @@ use clap::App;
 use hyper::Client;
 use hyper::header::Connection;
 use hyper::header::{Headers, Authorization, Bearer};
-
-mod auth;
 
 fn main() {
 	env_logger::init().unwrap();
@@ -34,7 +31,7 @@ fn main() {
 	let api_url = matches.value_of("API_URL").unwrap_or("https://api.sphere.io");
 
 
-	match auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
+	match sphere::auth::retrieve_token(auth_url, project_key, client_id, client_secret) {
 		Err(err) => panic!("error: {}", err),
 		Ok(token) => {
 			let access_token = token.access_token();

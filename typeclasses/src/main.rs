@@ -62,7 +62,8 @@ fn main() {
 	println!("{}", 3.to_json());
 	println!("{}", vec![1, 2, 3, 4, 5].to_json());
 	println!("{}", vec!["hello".to_string(), "world".to_string()].to_json());
-	// does not compile
+	// does not compile - why?
+	// no method named `to_json` found for type `collections::vec::Vec<&str>` in the current scope
 	// println!("{}", vec!["hello", "world"].to_json());
 
 	let p1 = Person::new("yann", 38);

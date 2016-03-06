@@ -8,6 +8,22 @@ impl ToJson for str {
 	}
 }
 
+// impl<'a> ToJson for &'a str {
+// 	fn to_json(&self) -> String {
+// 		format!("\"{}\"", &self)
+// 	}
+// }
+
+// more general approach than &str:
+// for all &T that implements ToJson.
+// The size is optionaly known at compile time to be able to use ToJson<str> for example.
+// applies to &str can use ToJson<str>
+impl<'a, T: ?Sized + ToJson> ToJson for &'a T {
+	fn to_json(&self) -> String {
+		(*self).to_json()
+	}
+}
+
 impl ToJson for String {
 	fn to_json(&self) -> String {
 		format!("\"{}\"", &self)
@@ -62,9 +78,7 @@ fn main() {
 	println!("{}", 3.to_json());
 	println!("{}", vec![1, 2, 3, 4, 5].to_json());
 	println!("{}", vec!["hello".to_string(), "world".to_string()].to_json());
-	// does not compile - why?
-	// no method named `to_json` found for type `collections::vec::Vec<&str>` in the current scope
-	// println!("{}", vec!["hello", "world"].to_json());
+	println!("{}", vec!["hello", "world"].to_json());
 
 	let p1 = Person::new("yann", 38);
 	println!("{}", p1.to_json());

@@ -1,0 +1,10 @@
+[package]
+name = "rotor_http"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon@commercetools.de>"]
+
+[dependencies]
+rotor = "0.6.1"
+
+[dependencies.rotor-http]
+path = "../../rotor-http"

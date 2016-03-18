@@ -1,8 +1,12 @@
 extern crate rand;
 
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+use std::time::Duration;
+use std::thread;
 use rand::random;
 
-fn monte_carlo_pi(n: usize) -> f32 {
+fn monte_carlo_pi(n: usize) -> usize {
 	let mut m = 0usize;
 	for _ in 0usize..n {
 		let x = random::<f32>();
@@ -11,13 +15,43 @@ fn monte_carlo_pi(n: usize) -> f32 {
 			m = m + 1;
 		}
 	}
-	4.0 * (m as f32) / (n as f32)
+	m
+}
+
+fn worker(receiver: Receiver<usize>, sender: Sender<f64>) {
+	let mut m = 0usize;
+	let n = 10_000_000;
+	let mut i = 0;
+	loop {
+		if receiver.try_recv().is_ok() {
+			println!("worker(): Aborting calculation due to signal from main (i={})", i);
+			break;
+		}
+		println!("worker(): Starting calculation");
+		m = m + monte_carlo_pi(n);
+		println!("worker(): Calculation done");
+		i = i + 1;
+	}
+	let val = 4.0 * (m as f64) / ((n*i) as f64);
+    sender.send(val).unwrap();
 }
 
 fn main() {
-    println!("For       1000 random drawings pi = {}", monte_carlo_pi(1000));
-    println!("For      10000 random drawings pi = {}", monte_carlo_pi(10000));
-    println!("For     100000 random drawings pi = {}", monte_carlo_pi(100000));
-    println!("For    1000000 random drawings pi = {}", monte_carlo_pi(1000000));
-    println!("For   10000000 random drawings pi = {}", monte_carlo_pi(10000000));
+	let wait_in_s = 10;
+
+	// channel from worker to main to send the value of PI
+	let (send_from_worker_to_main, receive_from_worker) = mpsc::channel();
+
+	// channel from main to worker to signal a stop
+	let (send_from_main_to_worker, receive_from_main) = mpsc::channel();
+
+	println!("main(): start calculation and wait {}s", wait_in_s);
+    thread::spawn(|| worker(receive_from_main, send_from_worker_to_main));
+
+    thread::sleep(Duration::from_secs(wait_in_s));
+    println!("main(): Sending abort to worker");
+
+    send_from_main_to_worker.send(0).unwrap();
+    let val = receive_from_worker.recv().unwrap();
+    println!("main(): pi = {}. Error = {}", val, (std::f64::consts::PI - val).abs());
 }

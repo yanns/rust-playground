@@ -6,7 +6,8 @@ use std::time::Duration;
 use std::thread;
 use rand::random;
 
-fn monte_carlo_pi(n: usize) -> usize {
+fn monte_carlo_pi(n: usize, sender: Sender<usize>) {
+	println!("montecarlopi(): Starting calculation");
 	let mut m = 0usize;
 	for _ in 0usize..n {
 		let x = random::<f32>();
@@ -15,25 +16,34 @@ fn monte_carlo_pi(n: usize) -> usize {
 			m = m + 1;
 		}
 	}
-	m
+	println!("montecarlopi(): Calculation done");
+	// do not panic if cannot send
+	sender.send(m).ok();
 }
 
-fn worker(receiver: Receiver<usize>, sender: Sender<f64>) {
+fn worker(receiver: Receiver<usize>, send_to_main: Sender<f64>) {
 	let mut m = 0usize;
 	let n = 10_000_000;
 	let mut i = 0;
+	let (sender, receive_from_montecarlo) = mpsc::channel();
+	let initial_sender = sender.clone();
+	thread::spawn(move || monte_carlo_pi(n, initial_sender));
 	loop {
 		if receiver.try_recv().is_ok() {
 			println!("worker(): Aborting calculation due to signal from main (i={})", i);
 			break;
 		}
-		println!("worker(): Starting calculation");
-		m = m + monte_carlo_pi(n);
-		println!("worker(): Calculation done");
-		i = i + 1;
+		if let Ok(r) = receive_from_montecarlo.try_recv() {
+            m = m + r;
+            i = i + 1;
+            let sender_clone = sender.clone();
+            thread::spawn(move || monte_carlo_pi(n, sender_clone));
+        }
+        // main can interrupt worker every 50 ms
+        thread::sleep(Duration::from_millis(50));
 	}
 	let val = 4.0 * (m as f64) / ((n*i) as f64);
-    sender.send(val).unwrap();
+    send_to_main.send(val).unwrap();
 }
 
 fn main() {

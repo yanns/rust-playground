@@ -4,14 +4,15 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 use std::time::Duration;
 use std::thread;
-use rand::random;
+use rand::Rng;
 
 fn monte_carlo_pi(n: usize, sender: Sender<usize>) {
 	println!("montecarlopi(): Starting calculation");
 	let mut m = 0usize;
+	let mut rng = rand::thread_rng();
 	for _ in 0usize..n {
-		let x = random::<f32>();
-		let y = random::<f32>();
+		let x = rng.gen::<f32>();
+		let y = rng.gen::<f32>();
 		if (x*x + y*y) < 1.0 {
 			m = m + 1;
 		}

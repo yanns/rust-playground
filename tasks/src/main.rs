@@ -7,7 +7,7 @@ use std::thread;
 use rand::Rng;
 
 fn monte_carlo_pi(n: usize, sender: Sender<usize>) {
-	println!("montecarlopi(): Starting calculation");
+	println!("monte_carlo_pi(): Starting calculation");
 	let mut m = 0usize;
 	let mut rng = rand::thread_rng();
 	for _ in 0usize..n {
@@ -17,7 +17,7 @@ fn monte_carlo_pi(n: usize, sender: Sender<usize>) {
 			m = m + 1;
 		}
 	}
-	println!("montecarlopi(): Calculation done");
+	println!("monte_carlo_pi(): Calculation done");
 	// do not panic if cannot send
 	sender.send(m).ok();
 }

@@ -4,27 +4,29 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 use std::time::Duration;
 use std::thread;
-use rand::Rng;
+use rand::distributions::{IndependentSample, Range};
 
+// see https://doc.rust-lang.org/rand/rand/index.html#monte-carlo-estimation-of-π
 fn monte_carlo_pi(n: usize, sender: Sender<usize>) {
 	println!("monte_carlo_pi(): Starting calculation");
-	let mut m = 0usize;
+	let mut in_circle = 0;
+	let between = Range::new(-1f64, 1.);
 	let mut rng = rand::thread_rng();
-	for _ in 0usize..n {
-		let x = rng.gen::<f32>();
-		let y = rng.gen::<f32>();
-		if (x*x + y*y) < 1.0 {
-			m = m + 1;
+	for _ in 0..n {
+		let x = between.ind_sample(&mut rng);
+		let y = between.ind_sample(&mut rng);
+		if (x*x + y*y) <= 1.0 {
+			in_circle += 1;
 		}
 	}
 	println!("monte_carlo_pi(): Calculation done");
 	// do not panic if cannot send
-	sender.send(m).ok();
+	sender.send(in_circle).ok();
 }
 
 fn worker(receiver: Receiver<usize>, send_to_main: Sender<f64>) {
-	let mut m = 0usize;
-	let n = 10_000_000;
+	let mut in_circle = 0;
+	let n = 1_000_000;
 	let mut i = 0;
 	let (sender, receive_from_montecarlo) = mpsc::channel();
 	let initial_sender = sender.clone();
@@ -35,15 +37,15 @@ fn worker(receiver: Receiver<usize>, send_to_main: Sender<f64>) {
 			break;
 		}
 		if let Ok(r) = receive_from_montecarlo.try_recv() {
-            m = m + r;
-            i = i + 1;
+            in_circle += r;
+            i += 1;
             let sender_clone = sender.clone();
             thread::spawn(move || monte_carlo_pi(n, sender_clone));
         }
         // main can interrupt worker every 50 ms
         thread::sleep(Duration::from_millis(50));
 	}
-	let val = 4.0 * (m as f64) / ((n*i) as f64);
+	let val = 4.0 * (in_circle as f64) / ((n*i) as f64);
     send_to_main.send(val).unwrap();
 }
 

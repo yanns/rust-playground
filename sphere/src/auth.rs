@@ -1,4 +1,5 @@
 use std::fmt;
+use std::borrow::Cow;
 use std::io::Read;
 
 use hyper::Client;
@@ -9,28 +10,30 @@ use chrono::*;
 
 /// access token
 #[derive(Debug)]
-pub struct Token {
-  access_token: String,
+pub struct Token<'a> {
+  pub access_token: Cow<'a, str>,
   expires_at: DateTime<UTC>
 }
 
-impl fmt::Display for Token {
+impl<'a> fmt::Display for Token<'a> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		write!(f, "Token: access_token = {}, expires_at = {}", self.access_token, self.expires_at)
 	}
 }
 
-impl Token {
-	fn new(access_token: &str, expires_in_s: i64) -> Token {
+impl<'a> Token<'a> {
+	pub fn new<S>(access_token: S, expires_in_s: i64) -> Token<'a>
+		where S: Into<Cow<'a, str>>
+	{
 		let duration = Duration::seconds(expires_in_s);
 		Token {
-			access_token: access_token.to_string(),
+			access_token: access_token.into(),
 			expires_at: UTC::now() + duration,
 		}
 	}
 
 	pub fn access_token(&self) -> String {
-		self.access_token.to_owned()
+		self.access_token.as_ref().to_owned()
 	}
 
 	pub fn is_valid_with_margin(&self, now: DateTime<UTC>,  margin: Duration) -> bool {
@@ -50,7 +53,7 @@ struct TokenFromApi {
 	expires_in: i64,
 }
 
-pub fn retrieve_token(auth_url: &str, project_key: &str, client_id: &str , client_secret: &str) -> Result<Token, String> {
+pub fn retrieve_token<'a>(auth_url: &str, project_key: &str, client_id: &str , client_secret: &str) -> Result<Token<'a>, String> {
 	let client = Client::new();
 
 	let mut auth_headers = Headers::new();
@@ -85,7 +88,7 @@ pub fn retrieve_token(auth_url: &str, project_key: &str, client_id: &str , clien
 					debug!("Response from '{}': {}", url, body);
 					json::decode::<TokenFromApi>(&body)
 						.map_err(|err| err.to_string())
-						.map(|token_from_api| Token::new(&token_from_api.access_token, token_from_api.expires_in))
+						.map(|token_from_api| Token::new(token_from_api.access_token, token_from_api.expires_in))
 				})
 			},
 		Err(err) => Err(err.to_string()),
@@ -96,6 +99,16 @@ pub fn retrieve_token(auth_url: &str, project_key: &str, client_id: &str , clien
 mod tests {
 	use super::*;
 	use chrono::*;
+
+	#[test]
+	fn make_auth_token_with_str_slice() {
+		Token::new("token", 60);
+	}
+
+	#[test]
+	fn make_auth_token_with_owned_string() {
+		Token::new(String::from("token"), 60);
+	}
 
 	#[test]
 	fn token_is_valid_before_expiration_date() {

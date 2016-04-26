@@ -13,7 +13,7 @@ fn with_server<H: Handler + 'static, R>(handle: H, test: &Fn(String) -> R) -> R 
 
 #[test]
 fn auth_can_extract_oauth_token() {
-	fn handle(req: Request, res: Response) {
+	fn handle(_: Request, res: Response) {
 		res.send(b"{\"access_token\": \"test\", \"expires_in\": 234}").unwrap();
 	}
 

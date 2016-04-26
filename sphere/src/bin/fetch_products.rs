@@ -41,7 +41,7 @@ fn main() {
 			headers.set(
 				Authorization(
 					Bearer {
-						token: access_token.to_owned()
+						token: access_token
 					}
 				)
 			);

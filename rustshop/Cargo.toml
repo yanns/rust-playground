@@ -1,0 +1,7 @@
+[package]
+name = "rustshop"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+
+[dependencies]
+mrusty = "0.4.3"

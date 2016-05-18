@@ -17,16 +17,18 @@ fn add_todo(todos: &mut Vec<Todo>, title: &str) {
 	});
 }
 
-fn remove_todo(todos: &mut Vec<Todo>, todo_id: i16) {
+fn with_todo_id<P>(todos: &mut Vec<Todo>, todo_id: i16, f: P) where P: Fn(&mut Todo) {
 	if let Some(todo) = todos.iter_mut().find(|todo| todo.id == todo_id) {
-		todo.deleted = true;
-	}
+		f(todo);
+	}	
+}
+
+fn remove_todo(todos: &mut Vec<Todo>, todo_id: i16) {
+	with_todo_id(todos, todo_id, |todo| todo.deleted = true);
 }
 
 fn mark_done(todos: &mut Vec<Todo>, todo_id: i16) {
-	if let Some(todo) = todos.iter_mut().find(|todo| todo.id == todo_id) {
-		todo.completed = true;
-	}
+	with_todo_id(todos, todo_id, |todo| todo.completed = true);
 }
 
 fn print_todos(todos: &Vec<Todo>) {

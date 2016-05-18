@@ -1,0 +1,6 @@
+[package]
+name = "todo-list"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon@commercetools.de>"]
+
+[dependencies]

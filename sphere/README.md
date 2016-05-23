@@ -14,11 +14,11 @@ Example: to enable all logs for the `auth` module:
 RUST_LOG=sphere::auth cargo run --example fetch_products -- <PROJECT_KEY> <CLIENT_ID> <CLIENT_SECRET>
 ```
 
-## Release
+## Release an example
 
-Create an executable:
+Create an executable from an example:
 ```
-cargo build
+cargo build --example fetch_products
 ```
 
 Run the executable

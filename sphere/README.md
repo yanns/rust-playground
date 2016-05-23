@@ -13,3 +13,15 @@ Example: to enable all logs for the `auth` module:
 ```
 RUST_LOG=sphere::auth cargo run --example fetch_products -- <PROJECT_KEY> <CLIENT_ID> <CLIENT_SECRET>
 ```
+
+## Release
+
+Create an executable:
+```
+cargo build
+```
+
+Run the executable
+```
+./target/debug/examples/fetch_products <PROJECT_KEY> <CLIENT_ID> <CLIENT_SECRET>
+```

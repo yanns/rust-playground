@@ -18,10 +18,10 @@ fn main() {
         .version("1.0")
         .author("Yann Simon <yann.simon.fr@gmail.com>")
         .args_from_usage(
-			      "<PROJECT_KEY> 'project key'
-			       <CLIENT_ID> 'client ID'
+            "<PROJECT_KEY> 'project key'
+             <CLIENT_ID> 'client ID'
              <CLIENT_SECRET> 'client secret'
-			       --auth_url=[AUTH_URL] 'authentication URL (default to \"https://auth.sphere.io\")'
+             --auth_url=[AUTH_URL] 'authentication URL (default to \"https://auth.sphere.io\")'
              --api_url=[API_URL] 'api URL (default to \"https://api.sphere.io\")'")
         .get_matches();
 

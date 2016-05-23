@@ -33,23 +33,23 @@ fn main() {
 
 
     let token = sphere::auth::retrieve_token(auth_url, project_key, client_id, client_secret).unwrap();
-		let access_token = token.access_token();
-		debug!("token: {} {}", access_token, token.is_valid());
+    let access_token = token.access_token();
+    debug!("token: {} {}", access_token, token.is_valid());
 
-		let mut headers = Headers::new();
-		headers.set(Authorization(Bearer { token: access_token }));
+    let mut headers = Headers::new();
+    headers.set(Authorization(Bearer { token: access_token }));
 
-		let client = Client::new();
+    let client = Client::new();
 
-		let uri = format!("{}/{}/products?limit=1", api_url, project_key);
-		let mut projets_res = client.get(&uri)
-				.header(Connection::close())
-				.headers(headers)
-				.send()
-				.unwrap();
+    let uri = format!("{}/{}/products?limit=1", api_url, project_key);
+    let mut projets_res = client.get(&uri)
+        .header(Connection::close())
+        .headers(headers)
+        .send()
+        .unwrap();
 
-		let mut body = String::new();
-		projets_res.read_to_string(&mut body).unwrap();
+    let mut body = String::new();
+    projets_res.read_to_string(&mut body).unwrap();
 
-		println!("Response: {}", body);
+    println!("Response: {}", body);
 }

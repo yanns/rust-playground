@@ -1,0 +1,6 @@
+[package]
+name = "todo-list-redux"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+
+[dependencies]

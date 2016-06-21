@@ -43,13 +43,13 @@ enum VisibilityFilter {
     ShowCompleted,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 enum Action {
     Todos(TodoAction),
     Visibility(VisibilityFilter),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 enum TodoAction {
     Add(String),
     Toggle(i16),

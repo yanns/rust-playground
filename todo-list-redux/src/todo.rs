@@ -2,7 +2,7 @@ use store::Action;
 use store::Action::Todos;
 use todo::TodoAction::{Add, Toggle, Remove};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
 pub struct Todo {
     pub id: i16,
     pub title: String,
@@ -59,4 +59,3 @@ pub fn todo_reducer(state: &Vec<Todo>, action: &Action) -> Vec<Todo> {
 
     new_state
 }
-

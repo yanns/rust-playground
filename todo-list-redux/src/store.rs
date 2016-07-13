@@ -1,10 +1,18 @@
 use store::Action::Visibility;
 use todo::{Todo, TodoAction, todo_reducer};
 
-#[derive(Clone, Debug)]
+use rustc_serialize::json::{self, Json, ToJson};
+
+#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
 pub struct State {
     pub todos: Vec<Todo>,
     pub visibility_filter: VisibilityFilter,
+}
+
+impl ToJson for State {
+    fn to_json(&self) -> Json {
+        Json::from_str(&json::encode(&self).unwrap()).unwrap()
+    }
 }
 
 impl State {
@@ -22,7 +30,7 @@ pub enum Action {
     Visibility(VisibilityFilter),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
 pub enum VisibilityFilter {
     ShowAll,
     ShowActive,
@@ -59,6 +67,7 @@ impl Store {
         }
     }
 
+    #[allow(dead_code)]
     pub fn subscribe(&mut self, listener: fn(&State)) {
         &self.listeners.push(listener);
     }

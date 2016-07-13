@@ -1,95 +1,83 @@
+#[macro_use]
+extern crate nickel;
+extern crate rustc_serialize;
+extern crate handlebars;
+
+use nickel::{Nickel, HttpRouter, FormBody};
+use std::sync::{Arc, Mutex};
+
 mod todo;
 mod store;
+mod template;
 
 use todo::TodoAction::{Add, Toggle, Remove};
 use store::Action::{Todos, Visibility};
 use store::VisibilityFilter::{ShowAll, ShowActive, ShowCompleted};
-use todo::Todo;
-use store::{Store, State, reducer};
-
-
-fn print_todo(todo: &Todo) {
-    let done = if todo.completed {
-        "✔"
-    } else {
-        " "
-    };
-    println!("[{}] {} {}", done, todo.id, todo.title);
-}
-
-fn print_todos(state: &State) {
-    let visibility = &state.visibility_filter;
-    println!("\n\nTodo List:\n-------------------");
-    for todo in &state.todos {
-        if !todo.deleted {
-            match *visibility {
-                ShowAll => print_todo(&todo),
-                ShowCompleted => {
-                    if todo.completed {
-                        print_todo(&todo)
-                    }
-                }
-                ShowActive => {
-                    if !todo.completed {
-                        print_todo(&todo)
-                    }
-                }
-            }
-        }
-    }
-    println!("-------------------\nVisibility filter:  {:?}", visibility);
-    print_instructions();
-}
-
-fn print_instructions() {
-    println!("\nAvailable commands: \nadd [text] - toggle [id] - remove [id]\nshow \
-              [all|active|completed]");
-}
-
-fn invalid_command(command: &str) {
-    println!("Invalid command: {}", command);
-}
+use store::{Store, reducer};
+use template::render;
 
 
 fn main() {
     let mut store = Store::create_store(reducer);
-    store.subscribe(print_todos);
 
-    print_instructions();
-    loop {
-        let mut command = String::new();
-        std::io::stdin()
-            .read_line(&mut command)
-            .expect("failed to read line");
+    // Add some todos so we've got something to render
+    store.dispatch(Todos(Add("one thing".to_string())));
+    store.dispatch(Todos(Add("another thing".to_string())));
 
-        let command_parts: Vec<&str> = command.split_whitespace().collect();
+    let store_container = Arc::new(Mutex::new(store));
 
-        match command_parts.len() {
-            0 => invalid_command(&command),
-            _ => {
-                match command_parts[0] {
-                    "add" => store.dispatch(Todos(Add(command_parts[1..].join(" ").to_string()))),
-                    "remove" => {
-                        if let Ok(num) = command_parts[1].parse::<i16>() {
-                            store.dispatch(Todos(Remove(num)))
-                        }
+    let mut server = Nickel::new();
+
+    let store = store_container.clone();
+    server.get("/",
+               middleware! { |_req, res|
+        let store = store.lock().unwrap();
+
+        return render(res, "./src/todos.tpl", store.get_state())
+    });
+
+    let store = store_container.clone();
+    server.get("/:action/:id",
+               middleware! { |_req, res|
+        let mut store = store.lock().unwrap();
+
+        if let Ok(num) = _req.param("id").unwrap().parse::<i16>() {
+            match _req.param("action").unwrap() {
+                "toggle" => store.dispatch( Todos( Toggle(num) ) ),
+                "remove" => store.dispatch( Todos( Remove(num) ) ),
+                _ => (),
+            }
+        } else {
+            match _req.param("action").unwrap() {
+                "show" => {
+                    match _req.param("id").unwrap() {
+                        "all" => store.dispatch( Visibility( ShowAll ) ),
+                        "active" => store.dispatch( Visibility( ShowActive ) ),
+                        "completed" => store.dispatch( Visibility( ShowCompleted ) ),
+                        _ => (),
                     }
-                    "toggle" => {
-                        if let Ok(num) = command_parts[1].parse::<i16>() {
-                            store.dispatch(Todos(Toggle(num)))
-                        }
-                    }
-                    "show" => {
-                        match command_parts[1] {
-                            "all" => store.dispatch(Visibility(ShowAll)),
-                            "active" => store.dispatch(Visibility(ShowActive)),
-                            "completed" => store.dispatch(Visibility(ShowCompleted)),
-                            _ => invalid_command(&command),
-                        }
-                    }
-                    _ => invalid_command(&command),
-                }
+                },
+                _ => (),
             }
         }
-    }
+
+        return render(res, "./src/todos.tpl", store.get_state())
+
+    });
+
+    let store = store_container.clone();
+    server.post("/*",
+                middleware! { |req, res|
+        let mut store = store.lock().unwrap();
+        let form_body = req.form_body().ok().unwrap();
+        if let Some(new_todo) = form_body.get("todo") {
+            if new_todo.len() > 0 {
+                store.dispatch( Todos( Add(new_todo.to_string()) ) );
+            }
+        }
+
+        return render(res, "./src/todos.tpl", store.get_state())
+    });
+
+    server.listen("localhost:3000");
 }

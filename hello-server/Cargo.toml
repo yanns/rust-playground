@@ -1,0 +1,9 @@
+[package]
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+name = "hello-server"
+version = "0.1.0"
+
+[dependencies]
+handlebars = "0.18.1"
+nickel = "0.8.1"
+rustc-serialize = "0.3.19"

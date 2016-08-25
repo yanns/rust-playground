@@ -1,0 +1,11 @@
+[package]
+name = "pingpong"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+
+[[bin]]
+name = "server"
+
+[dependencies]
+mio = "0.4.1"
+bytes = "0.2.11"

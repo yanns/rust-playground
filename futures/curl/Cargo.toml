@@ -1,0 +1,11 @@
+[package]
+name = "curl"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+
+[dependencies]
+futures = { git = "https://github.com/alexcrichton/futures-rs" }
+futures-io = { git = "https://github.com/alexcrichton/futures-rs" }
+futures-mio = { git = "https://github.com/alexcrichton/futures-rs" }
+futures-curl = { git = "https://github.com/alexcrichton/futures-rs" }
+curl = "0.3"

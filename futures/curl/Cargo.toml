@@ -9,3 +9,4 @@ futures-io = { git = "https://github.com/alexcrichton/futures-rs" }
 futures-mio = { git = "https://github.com/alexcrichton/futures-rs" }
 futures-curl = { git = "https://github.com/alexcrichton/futures-rs" }
 curl = "0.3"
+time = "0.1"

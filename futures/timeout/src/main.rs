@@ -18,13 +18,14 @@ fn main() {
 
 fn read_name() -> io::Result<String> {
     let result = ReadLine::new()
-        .select(Timeout::new(Duration::from_secs(3), || {
-            io::Error::new(io::ErrorKind::Other, "timeout elapsed".to_string())
-        }))
+//        .select(Timeout::new(Duration::from_secs(3), || {
+//            io::Error::new(io::ErrorKind::Other, "timeout elapsed".to_string())
+//        }))
         .wait();
+    result
 
-    match result {
-        Ok((name, _)) => Ok(name),
-        Err((e, _)) => Err(e),
-    }
+//    match result {
+//        Ok((name, _)) => Ok(name),
+//        Err((e, _)) => Err(e),
+//    }
 }

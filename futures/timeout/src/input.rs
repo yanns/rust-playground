@@ -1,16 +1,20 @@
 use futures::*;
+use futures::task::Task;
 use std::io;
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 
 pub struct ReadLine {
-    recv: Oneshot<String>,
+    recv: Receiver<io::Result<String>>,
+    taskSender: Sender<Task>,
 }
 
 impl ReadLine {
     pub fn new() -> ReadLine {
-        let (tx, rx) = oneshot::<String>();
-        thread::spawn(move || read_line(tx));
-        ReadLine { recv: rx }
+        let (tx, rx) = mpsc::channel();
+        let (txTask, rxTask) = mpsc::channel();
+        thread::spawn(move || tx.send(read_line(rxTask)));
+        ReadLine { recv: rx, taskSender: txTask }
     }
 }
 
@@ -19,23 +23,38 @@ impl Future for ReadLine {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        println!("poll!");
-        match self.recv.poll() {
-            Err(_) => Err(io::Error::new(io::ErrorKind::Other, "blabla")),
-            Ok(a) => Ok(a),
+        use futures::Async;
+        use futures::task;
+
+        match self.recv.try_recv() {
+            Err(_) => {
+                let task = task::park();
+                self.taskSender.send(task).unwrap();
+                Ok(Async::NotReady)
+            }
+            Ok(Ok(line)) => Ok(Async::Ready(line)),
+            Ok(Err(e)) => Err(e),
+
         }
     }
 }
 
-fn read_line(tx: Complete<String>) {
+fn read_line(rx: Receiver<Task>) -> io::Result<String> {
     use std::io::BufRead;
 
     let input = io::stdin();
     let mut locked = input.lock();
     let mut buf = String::new();
+    let task = rx.recv().unwrap();
 
     match locked.read_line(&mut buf) {
-        Ok(_) => tx.complete(buf),
-        Err(e) => panic!(e),
+        Ok(_) => {
+            task.unpark();
+            Ok(buf)
+        }
+        Err(e) => {
+            task.unpark();
+            Err(e)
+        }
     }
 }

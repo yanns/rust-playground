@@ -1,16 +1,15 @@
-use futures::{Future, Poll};
+use futures::*;
 use std::io;
-use std::sync::mpsc::{self, Receiver};
 use std::thread;
 
 pub struct ReadLine {
-    recv: Receiver<io::Result<String>>,
+    recv: Oneshot<String>,
 }
 
 impl ReadLine {
     pub fn new() -> ReadLine {
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || tx.send(read_line()));
+        let (tx, rx) = oneshot::<String>();
+        thread::spawn(move || read_line(tx));
         ReadLine { recv: rx }
     }
 }
@@ -20,22 +19,15 @@ impl Future for ReadLine {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        use futures::Async;
-        use futures::task;
-
-        match self.recv.try_recv() {
-            Err(_) => {
-                task::park().unpark();
-                Ok(Async::NotReady)
-            }
-            Ok(Ok(line)) => Ok(Async::Ready(line)),
-            Ok(Err(e)) => Err(e),
-
+        println!("poll!");
+        match self.recv.poll() {
+            Err(_) => Err(io::Error::new(io::ErrorKind::Other, "blabla")),
+            Ok(a) => Ok(a),
         }
     }
 }
 
-fn read_line() -> io::Result<String> {
+fn read_line(tx: Complete<String>) {
     use std::io::BufRead;
 
     let input = io::stdin();
@@ -43,7 +35,7 @@ fn read_line() -> io::Result<String> {
     let mut buf = String::new();
 
     match locked.read_line(&mut buf) {
-        Ok(_) => Ok(buf),
-        Err(e) => Err(e),
+        Ok(_) => tx.complete(buf),
+        Err(e) => panic!(e),
     }
 }

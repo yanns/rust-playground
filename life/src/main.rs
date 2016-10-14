@@ -24,9 +24,7 @@ struct Grid {
 
 impl Grid {
     fn new() -> Grid {
-        Grid {
-            cells: [[false; NCELLS as usize]; NCELLS as usize],
-        }
+        Grid { cells: [[false; NCELLS as usize]; NCELLS as usize] }
     }
 
     fn life_random() -> Grid {

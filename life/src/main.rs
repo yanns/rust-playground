@@ -19,59 +19,41 @@ const CELL_HEIGHT: u32 = CELL_WIDTH;
 const NCELLS: u32 = (MAX_X + 1) / CELL_WIDTH;
 
 struct Grid {
-    cells: Vec<Vec<bool>>,
+    cells: [[bool; NCELLS as usize]; NCELLS as usize],
 }
 
 impl Grid {
     fn new() -> Grid {
-        let mut v: Vec<Vec<bool>> = Vec::with_capacity(NCELLS as usize);
-        for i in 0..NCELLS {
-            v.push(Vec::with_capacity(NCELLS as usize));
-            for _ in 0..NCELLS {
-                v[i as usize].push(false);
-            }
-        }
         Grid {
-            cells: v,
+            cells: [[false; NCELLS as usize]; NCELLS as usize],
         }
     }
 
     fn life_random() -> Grid {
         let mut rng = rand::thread_rng();
-        let mut v: Vec<Vec<bool>> = Vec::with_capacity(NCELLS as usize);
+        let mut grid = Grid::new();
 
         for i in 0..NCELLS {
-            v.push(Vec::with_capacity(NCELLS as usize));
-            for _ in 0..NCELLS {
-                v[i as usize].push(rng.gen());
+            for j in 0..NCELLS {
+                if rng.gen() {
+                    grid.cells[i as usize][j as usize] = true;
+                }
             }
         }
-
-        Grid {
-            cells: v,
-        }
+        grid
     }
 
-    fn glider(ncells: u32) -> Grid {
-        let mut v: Vec<Vec<bool>> = Vec::with_capacity(NCELLS as usize);
+    fn glider() -> Grid {
+        let mut grid = Grid::new();
 
-        for i in 0..ncells {
-            v.push(Vec::with_capacity(NCELLS as usize));
-            for _ in 0..ncells {
-                v[i as usize].push(false);
-            }
-        }
-
-        v[10][11] = true;
-        v[11][12] = true;
-        v[12][10] = true;
-        v[12][11] = true;
-        v[12][12] = true;
-
-        Grid {
-            cells: v,
-        }
+        grid.set(10, 11, true);
+        grid.set(11, 12, true);
+        grid.set(12, 10, true);
+        grid.set(12, 11, true);
+        grid.set(12, 12, true);
+        grid
     }
+
 
     fn set(&mut self, r: usize, c: usize, value: bool) {
         self.cells[r][c] = value;

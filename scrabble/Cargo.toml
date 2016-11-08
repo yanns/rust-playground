@@ -1,0 +1,6 @@
+[package]
+name = "scrabble"
+version = "0.1.0"
+authors = ["Yann Simon <yann.simon.fr@gmail.com>"]
+
+[dependencies]

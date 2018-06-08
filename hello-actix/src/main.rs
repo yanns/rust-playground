@@ -1,28 +1,30 @@
 extern crate actix_web;
 
 use actix_web::{http, server, App, HttpRequest};
-use std::cell::Cell;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 
 // This struct represents state
 struct AppState {
-    counter: Cell<usize>,
+    counter: Arc<AtomicUsize>,
 }
 
 fn index(req: HttpRequest<AppState>) -> String {
-    let count = req.state().counter.get() + 1;
-    req.state().counter.set(count);
+    let count = req.state().counter.fetch_add(1, Ordering::Relaxed);
 
-    format!("Request number: {}", count)
+    format!("Request number: {}", count + 1)
 }
 
-fn new_app() -> App<AppState> {
+fn new_app(counter: Arc<AtomicUsize>) -> App<AppState> {
     App::with_state(AppState {
-        counter: Cell::new(0),
+        counter: counter,
     }).resource("/", |r| r.method(http::Method::GET).f(index))
 }
 
 fn main() {
-    server::new(|| new_app())
+    let counter = Arc::new(AtomicUsize::new(0));
+    server::new(move || new_app(counter.clone()))
         .bind("127.0.0.1:8088")
         .unwrap()
         .run();
